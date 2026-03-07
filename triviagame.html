@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Michael's Category Chaos Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            padding: 40px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        .menu-slide {
+            text-align: center;
+            width: 100%;
+            padding: 20px 0;
+        }
+
+        .menu-slide h1 {
+            color: white;
+            font-size: 3.5em;
+            margin-bottom: 60px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1400px) {
+            .topic-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 1000px) {
+            .topic-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .topic-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .topic-card {
+            background: white;
+            padding: 25px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .topic-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .topic-card h2 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 6px;
+        }
+
+        .topic-card p {
+            color: #666;
+            font-size: 0.85em;
+        }
+
+        .photo-slide {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 90%;
+            max-height: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .photo-slide img {
+            width: 100%; 
+            height: auto; 
+            max-height: 60vh; 
+            display: block;
+            object-fit: contain;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            
+        }
+
+        .photo-slide h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .photo-slide p {
+            color: #666;
+            font-size: 1.4em;
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-weight: 500;
+        }
+
+        .photo-slide p.visible {
+            opacity: 1;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0,0,0,0.3);
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            color: #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .back-to-menu {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .back-to-menu:hover {
+            background: #667eea;
+            color: white;
+        }
+
+
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide active" id="menu">
+        <div class="menu-slide">
+            <h1>Michael's Category Chaos Game</h1>
+            <div class="topic-grid">
+                <div class="topic-card" onclick="showTopic('disneymovies')">
+                    <h2>🏰 Disney Movies</h2>
+                    <p>Iconic films</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('music')">
+                    <h2>🎸 Music</h2>
+                    <p>Legendary artists</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('tv')">
+                    <h2>📺 TV Shows</h2>
+                    <p>Classic series</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('fruit')">
+                    <h2>🍓 Fruits</h2>
+                    <p>Delicious and Nutritious</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('classicmovies')">
+                    <h2>🎬 Classic Movies</h2>
+                    <p>Movies of the ages</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('science')">
+                    <h2>🔬 Science</h2>
+                    <p>Discoveries</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('symbols')">
+                    <h2>✳️ Symbols and Punctuation</h2>
+                    <p>Syntax Savvy</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('celebrities')">
+                    <h2>⭐ Celebrities</h2>
+                    <p>Famous faces</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('technology')">
+                    <h2>💻 Technology</h2>
+                    <p>Tech innovations</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('gaming')">
+                    <h2>🎮 Gaming</h2>
+                    <p>Video games</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('cartooncharacters')">
+                    <h2>🐭 Cartoon Characters</h2>
+                    <p>Animated characters</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('animals')">
+                    <h2>🦁 Animals</h2>
+                    <p>Wildlife wonders</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('food')">
+                    <h2>🍕 Food</h2>
+                    <p>Culinary delights</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('cars')">
+                    <h2>🚗 Car Makes</h2>
+                    <p>Best-in-class vehicles</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('landmarks')">
+                    <h2>🏛️ Landmarks</h2>
+                    <p>Famous places around the world</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('art')">
+                    <h2>🖼️ Art</h2>
+                    <p>Masterpieces and the tools used to create them</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('fashion')">
+                    <h2>👗 Fashion</h2>
+                    <p>Style icons</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('nature')">
+                    <h2>🌿 Nature</h2>
+                    <p>Plants and plants everywhere</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('space')">
+                    <h2>🚀 Space</h2>
+                    <p>Cosmic wonders</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('birthday')">
+                    <h2>🎂 Birthday</h2>
+                    <p>Fun and festive</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('brands')">
+                    <h2>🏷️ Brands</h2>
+                    <p>Famous logos</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('superheroes')">
+                    <h2>🦸 Superheroes</h2>
+                    <p>Comic legends</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('boardgames')">
+                    <h2>🎲 Board Games</h2>
+                    <p>Fun games for everyone</p>
+                </div>
+                <div class="topic-card" onclick="showTopic('flags')">
+                    <h2>🏴 Flags</h2>
+                    <p>National symbols</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls" id="controls" 
+     style="display: none; justify-content: space-between; width: 100%; padding: 40px;">
+    <button class="btn" onclick="prevSlide()">← Previous</button>
+    <button class="btn" onclick="nextSlide()">Next →</button>
+</div>
+
+
+   
+    <div class="slide-counter" id="counter" style="display: none;">1 / 20</div>
+    <button class="back-to-menu" id="backBtn" style="display: none;" onclick="backToMenu()">← Menu</button>
+
+    <script>
+        let currentSlide = 0;
+        let currentTopic = '';
+        let slides = [];
+        let captionVisible = [];
+
+        const topics = {
+            
+    disneymovies: {
+    
+        title: 'Disney Movies',
+        items: [
+        "The Lion King (1994)", "Frozen (2013)", "Finding Nemo (2003)", "Lilo & Stitch (2002)", 
+        "Pocahontas (1995)", "Hercules (1997)", "Mulan (1998)", "Snow White and the Seven Dwarfs (1937)", 
+        "Pinocchio (1940)", "Peter Pan (1953)", "Cinderella (1950)", "Sleeping Beauty (1959)", "Tarzan (1999)",
+        "Big Hero 6 (2014)", "The Emperor\'s New Groove (2000)", "101 Dalmatians (1961)", "The Aristocats (1970)",  
+        "Lady and the Tramp (1955)", "The Fox and the Hound (1981)",  "The Rescuers (1977)",
+        
+    ],
+
+    images: [
+        "images/disneymovies/lionking.jpg",
+        "images/disneymovies/frozen.jpg",
+        "images/disneymovies/findingnemo.jpg",
+        "images/disneymovies/liloandstitch.jpg",
+        "images/disneymovies/pocahontas.jpg",
+        "images/disneymovies/hercules.jpg",
+        "images/disneymovies/mulan.jpg",    
+        "images/disneymovies/snowwhite.jpg",   
+        "images/disneymovies/pinocchio.jpg", 
+        "images/disneymovies/peterpan.jpg", 
+
+        "images/disneymovies/cinderella.jpg", 
+        "images/disneymovies/sleepingbeauty.jpg", 
+        "images/disneymovies/tarzan.jpg", 
+        "images/disneymovies/bighero.jpg", 
+        "images/disneymovies/emperor.jpg", 
+        "images/disneymovies/dalmatians.jpg",    
+        "images/disneymovies/cats.jpg",  
+        "images/disneymovies/ladyandthetramp.jpg",  
+        "images/disneymovies/fox.jpg",  
+        "images/disneymovies/rescuers.jpg"  
+    ]
+             
+
+          },
+            music: {
+                title: 'Music',
+                items: [
+                    'The Beatles', 'Michael Jackson', 'Billie Eilish', 'Madonna',
+                    'Queen', 'Beyoncé', 'Taylor Swift', 'Adele', 'Ed Sheeran', 'Dua Lipa',
+                    'Kanye West', 'Eminem', 'Rihanna', 'Lady Gaga', 'Spice Girls',  'BTS',
+                    'Ariana Grande', 'The Weeknd', 'Maroon 5', 'Elvis Presley'
+                   
+                ],
+
+                images: [
+                "images/music/beatles.jpg",
+                "images/music/mj.jpg",
+                "images/music/billie.jpg",
+                "images/music/madonna.jpg",
+                "images/music/queen.jpg",
+                "images/music/beyonce.jpg",
+                "images/music/taylor.jpg",
+                "images/music/adele.jpg",
+                "images/music/edsheeran.jpg",
+                "images/music/dualipa.jpg",
+
+                "images/music/kanye.jpg",
+                "images/music/eminem.jpg",
+                "images/music/rihanna.jpg",
+                "images/music/ladygaga.jpg",
+                "images/music/spicegirls.jpg",
+                "images/music/bts.jpg",
+                "images/music/ariana.jpg",
+                "images/music/weeknd.jpg",
+                "images/music/maroon.jpg", 
+                "images/music/elvis.jpg",  
+
+
+            ]
+            },
+            tv: {
+                title: 'TV Show',
+                items: [
+                    'Friends', 'Pretty Little Liars', 'The Office', 'Seinfeld', 
+                    'The Simpsons', 'Game of Thrones', 'Stranger Things', 'Brooklyn 99', 
+                    'Wednesday', 'The Bear', 'Yellowstone', 'Squid Game', 
+                    'Succession', 'Twin Peaks', 'Grey\'s Anatomy', 'Breaking Bad', 
+                    'Frasier', 'The Golden Girls', 'Paw Patrol', 'Bridgerton'
+
+                   
+                ],
+                images: [
+                "images/tvshows/friends.jpg",     
+                "images/tvshows/pll.jpg",   
+                "images/tvshows/office.jpg",    
+                "images/tvshows/seinfeld.jpg",    
+                "images/tvshows/simpsons.jpg",    
+                "images/tvshows/got.jpg",    
+                "images/tvshows/strangerthings.jpg",    
+                "images/tvshows/brooklyn.jpg",    
+                "images/tvshows/wednesday.jpg",    
+                "images/tvshows/bear.jpg", 
+
+                "images/tvshows/yellowstone.jpg",    
+                "images/tvshows/squid.jpg",    
+                "images/tvshows/succession.jpg",    
+                "images/tvshows/twinpeaks.jpg",    
+                "images/tvshows/greys.jpg",    
+                "images/tvshows/bb.jpg",    
+                "images/tvshows/frasier.jpg",    
+                "images/tvshows/gg.jpg", 
+                "images/tvshows/pp.jpg", 
+                "images/tvshows/bridgerton.jpg", 
+
+                 
+                ]
+            },
+            fruit: {
+                title: 'Fruits',
+                items: [
+                    'Banana', 'Pomegranate', 'Blackberry', 'Kiwi', 'Kiwano',
+                    'Gooseberry', 'Apricot', 'Jackfruit', 'Passion Fruit', 'Mango',
+                    'Tomato', 'Papaya', 'Plum', 'Rambutan', 'Pineapple', 
+                    'Dragonfruit', 'Guava', 'Avocado', 'Coconut', 'Persimmon'               
+                ],
+                images: [
+                "images/fruits/banana.jpg", 
+                "images/fruits/pom.jpg", 
+                "images/fruits/blackberry.jpg", 
+                "images/fruits/kiwi.jpg", 
+                "images/fruits/kiwano.jpg", 
+                "images/fruits/gooseberry.jpg", 
+                "images/fruits/apricot.jpg", 
+                "images/fruits/jackfruit.jpg", 
+                "images/fruits/passionfruit.jpg", 
+                "images/fruits/mango.jpg",   
+
+                "images/fruits/tomato.jpg",
+                "images/fruits/papaya.jpg",
+                "images/fruits/plum.jpg",
+                "images/fruits/rambutan.jpg",
+                "images/fruits/pineapple.jpg",
+                "images/fruits/dragonfruit.jpg",
+                "images/fruits/guava.jpg",
+                "images/fruits/avocado.jpg",
+                "images/fruits/coconut.jpg",
+                "images/fruits/persimmon.jpg",
+
+                ]
+            },
+            classicmovies: {
+                title: 'Classic Movies',
+                items: [
+                    "The Godfather (1972)", "Star Wars (Franchise)",  "Titanic (1997)",  "The Matrix (1999)",
+                    "Jurassic Park (1993)", "E.T. the Extra-Terrestrial (1982)", "Avatar (2009)",
+                    "Harry Potter (2001)", "The Lord of the Rings (2001)", "Back to the Future (1985)",
+                    "Indiana Jones (1981)", "Terminator (1984)", "Spider-Man (2002)", "James Bond (Franchise)",
+                    "Mission: Impossible (1996)", "Rocky (1976)",  "Godzilla (1954)", "Ghostbusters (1984)",
+                    "Fight Club (1999)",  "The Wizard of Oz (1939)"
+                ],
+                images: [
+                "images/classicmovies/godfather.jpg",
+                "images/classicmovies/starwars.jpg",
+                "images/classicmovies/titanic.jpg",
+                "images/classicmovies/matrix.jpg",
+                "images/classicmovies/jurassicpark.jpg",
+                "images/classicmovies/et.jpg",
+                "images/classicmovies/avatar.jpg",
+                "images/classicmovies/harrypotter.jpg",
+                "images/classicmovies/lordoftherings.jpg",
+                "images/classicmovies/backtothefuture.jpg",
+                "images/classicmovies/indianajones.jpg",
+                "images/classicmovies/terminator.jpg",
+                "images/classicmovies/spiderman.jpg",
+                "images/classicmovies/jamesbond.jpg",
+                "images/classicmovies/missionimpossible.jpg",
+                "images/classicmovies/rocky.jpg",
+                "images/classicmovies/godzilla.jpg",
+                "images/classicmovies/ghostbusters.jpg",
+                "images/classicmovies/fightclub.jpg",
+                "images/classicmovies/wizard.jpg",
+                 
+
+
+                ]
+            },
+            science: {
+                title: 'Science',
+                items: [
+                    'DNA', 'Periodic Table of Elements', 'Solar System', 'Human Brain', 'Viruses',
+                     'Gravity', 'Photosynthesis', 'Atom', 'Food Chain', 'Ecosystem', 'X-Ray',
+                    'Vaccine', 'Telescope', 'Microscope', 'Bacteria', 'Beaker',
+                    'MRI Scanner', 'Centrifuge', 'International Space Station', 'Bunsen Burner'
+                   
+                ],
+                images:[
+                "images/science/dna.jpg",
+                "images/science/table.jpg",
+                "images/science/solarsystem.jpg",
+                "images/science/brain.jpg",
+                "images/science/virus.jpg",
+                "images/science/gravity.jpg",
+                "images/science/photosynthesis.jpg",
+                "images/science/atom.jpg",
+                "images/science/foodchains.jpg",
+                "images/science/ecosystem.jpg",
+                "images/science/x-ray.jpg",
+                "images/science/vaccine.jpg",
+                "images/science/telescope.jpg",
+                "images/science/microscope.jpg",
+                "images/science/bacteria.jpg",
+                "images/science/beaker.jpg",
+                "images/science/mri.jpg",
+                "images/science/centrifuge.jpg",
+                "images/science/iss.jpg",
+                "images/science/bunsen.jpg",
+
+
+
+                ]
+            },
+            symbols: {
+                title: 'Symbols and Punctuation',
+                items: [
+                     'Semicolon', 'Colon', 'Em Dash', 'Asterisk', 'Interrobang',
+                    'Tilde', 'Question Mark', 'Ampersand', 'Quotation Marks',
+                    'Exclamation Point', 'Apostrophe', 'Caret', 'Ellipsis',
+                    'Octothorpe', 'Slash', 'Parentheses', 'Underscore',
+                    'At Sign', 'Comma', 'Percent Sign'
+                  
+                ],
+                images: [
+                "images/symbols/semicolon.jpg",
+                "images/symbols/colon.jpg",
+                "images/symbols/mdash.jpg",
+                "images/symbols/asterisk.jpg",
+                "images/symbols/interrobang.jpg",
+                "images/symbols/tilde.jpg",
+                "images/symbols/qmark.jpg",
+                "images/symbols/and.jpg",
+                "images/symbols/quotes.jpg",
+                "images/symbols/exclamation.jpg",
+
+                "images/symbols/apos.jpg",
+                "images/symbols/caret.jpg",
+                "images/symbols/ellipsis.jpg",
+                "images/symbols/octo.jpg",
+                "images/symbols/slash.jpg",
+                "images/symbols/parent.jpg",
+                "images/symbols/under.jpg",
+                "images/symbols/atsign.jpg",
+                "images/symbols/comma.jpg",
+                "images/symbols/percent.jpg",
+            
+
+
+                ]
+            },
+
+             
+            celebrities: {
+                title: 'Celebrities',
+                items: [
+                    'Tom Cruise', 'Brad Pitt', 'Leonardo DiCaprio', 'Johnny Depp',
+                    'Will Smith', 'Robert De Niro',  'Julia Roberts', 'Sandra Bullock',    
+                    'Jennifer Aniston', 'Angelina Jolie', 'Emma Stone', 'Margot Robbie', 'Zendaya',    
+                    'Timothée Chalamet', 'Tom Holland', 'Dwayne "The Rock" Johnson', 'Keanu Reeves',
+                    'Oprah Winfrey',  'Kim Kardashian', 'Jack Black', 
+                    
+                ],
+                images: [
+                "images/celebrities/tom.jpg",
+                "images/celebrities/brad.jpg",
+                "images/celebrities/leo.jpg",
+                "images/celebrities/depp.jpg",
+                "images/celebrities/will.jpg",
+                "images/celebrities/robert.jpg",
+                "images/celebrities/julia.jpg",
+                "images/celebrities/sandra.jpg",
+                "images/celebrities/jennifer.jpg",
+                "images/celebrities/jolie.jpg",
+
+                "images/celebrities/emma.jpg",
+                "images/celebrities/margot.jpg",
+                "images/celebrities/zendaya.jpg",
+                "images/celebrities/tim.jpg",
+                "images/celebrities/holland.jpg",
+                "images/celebrities/rock.jpg",
+                "images/celebrities/keanu.jpg",
+                "images/celebrities/oprah.jpg",
+                "images/celebrities/kim.jpg",
+                "images/celebrities/jack.jpg"
+
+
+                ]
+            },
+
+    technology: {
+                title: 'Technology',
+                items: [
+                    'Apple MacBook', 'Windows 95', 'Xbox', 'Android', '3D Printing', 
+                    'Google Search', 'Facebook', 'YouTube', 'Snapchat', 'Apple Watch',   
+                    'Instagram', 'Amazon Alexa', 'ChatGPT', 'TikTok', 'Bluetooth', 
+                    'PlayStation', 'iPhone', 'Wi-Fi', 'Drone', 'Nintendo Switch',  
+
+                ],
+                images: [
+                    "images/technology/macbook.jpg",
+                    "images/technology/windows.jpg",
+                    "images/technology/xbox.jpg",
+                    "images/technology/android.jpg",
+                    "images/technology/3d.jpg",
+                    "images/technology/google.jpg",
+                    "images/technology/facebook.jpg",
+                    "images/technology/youtube.jpg",
+                    "images/technology/snap.jpg",
+                    "images/technology/watch.jpg",
+
+                    "images/technology/ig.jpg",
+                    "images/technology/alexa.jpg",
+                    "images/technology/gpt.jpg",
+                    "images/technology/tt.jpg",
+                    "images/technology/bt.jpg",
+                    "images/technology/ps.jpg",
+                    "images/technology/iphone.jpg",
+                    "images/technology/wifi.jpg",
+                    "images/technology/drone.jpg",
+                    "images/technology/switch.jpg",
+    
+                ]
+            },
+            gaming: {
+                title: 'Gaming',
+                items: [
+                    'Super Mario Bros.', 'The Legend of Zelda', 'Pac-Man', 'Tetris',
+                    'Donkey Kong', 'Street Fighter', 'Kirby', 'Sonic the Hedgehog',
+                    'Pokemon', 'Grand Theft Auto', 'The Sims', 'Mario Kart',
+                    'Minecraft', 'Fortnite', 'Among Us', 'Roblox', 'Elden Ring',
+                    'Call of Duty', 'Animal Crossing', 'Resident Evil'
+                ],
+                images: [
+                "images/gaming/mario.jpg",
+                "images/gaming/zelda.jpg",
+                "images/gaming/pac.jpg",
+                "images/gaming/tetris.jpg",
+                "images/gaming/dk.jpg",
+                "images/gaming/sf.jpg",
+                "images/gaming/kirby.jpg",
+                "images/gaming/sonic.jpg",
+                "images/gaming/pokemon.jpg",
+                "images/gaming/gta.jpg",
+
+                "images/gaming/sims.jpg",
+                "images/gaming/mariok.jpg",
+                "images/gaming/mc.jpg",
+                "images/gaming/fn.jpg",
+                "images/gaming/au.jpg",
+                "images/gaming/rb.jpg",
+                "images/gaming/er.jpg",
+                "images/gaming/cod.jpg",
+                "images/gaming/ac.jpg",
+                "images/gaming/re.jpg",
+
+
+                ]
+            },
+            cartooncharacters: {
+                title: 'Cartoon Characters',
+                items: [
+                    'Mickey Mouse', 'Bugs Bunny', 'SpongeBob SquarePants', 'Arnold Shortman',
+                    'Homer Simpson', 'Squidward Tentacles', 'Scooby-Doo', 'Tom and Jerry',
+                    'Pikachu', 'Garfield', 'Snoopy', 'Louise Belcher', 'Bluey Heeler',
+                    'Goofy', 'The Powerpuff Girls', 'D.W.', 'Piccolo', 
+                    'Gumball Watterson', 'Timmy Turner', 'Phil and Lil'
+                    
+                ],
+                images: [
+                "images/cartooncharacters/mickey.jpg",
+                "images/cartooncharacters/bugs.jpg",
+                "images/cartooncharacters/sb.jpg",
+                "images/cartooncharacters/arnold.jpg",
+                "images/cartooncharacters/homer.jpg",
+                "images/cartooncharacters/squidward.jpg",
+                "images/cartooncharacters/scooby.jpg",
+                "images/cartooncharacters/tandj.jpg",
+                "images/cartooncharacters/pikachu.jpg",
+                "images/cartooncharacters/garfield.jpg",
+
+                "images/cartooncharacters/snoop.jpg",
+                "images/cartooncharacters/louisebelcher.jpg",
+                "images/cartooncharacters/bluey.jpg",
+                "images/cartooncharacters/goofy.jpg",
+                "images/cartooncharacters/ppg.jpg",
+                "images/cartooncharacters/dw.jpg",
+                "images/cartooncharacters/piccolo.jpg",
+                "images/cartooncharacters/gumball.jpg",
+                "images/cartooncharacters/timmy.jpg",
+                "images/cartooncharacters/philandlil.jpg"
+
+
+                ]
+            },
+            animals: {
+                title: 'Animals',
+                items: [
+                    'Giant Panda', 'Grizzly Bear', 'Hammerhead Shark', 'Red Panda', 'Jaguar', 
+                    'Flamingo', 'Sloth', 'Penguin',  'Rhinoceros', "Quokka",
+                    'Cheetah', 'Orangutan', 'Manta Ray', 'Chameleon', 'Bald Eagle',
+                    'Leopard', 'Narwhal', 'Snowy Owl', "Axolotl", 'Pangolin'
+                    
+                  
+                ],
+                images: [
+                    "images/animals/panda.jpg",
+                    "images/animals/bear.jpg",
+                    "images/animals/shark.jpg",
+                    "images/animals/rpanda.jpg",
+                    "images/animals/jag.jpg",
+                    "images/animals/fla.jpg",
+                    "images/animals/sloth.jpg",
+                    "images/animals/pg.jpg",
+                    "images/animals/rhino.jpg",
+                    "images/animals/quokka.jpg",
+                    "images/animals/cheetah.jpg",
+                    "images/animals/og.jpg",
+                    "images/animals/manta.jpg",
+                    "images/animals/ch.jpg",
+                    "images/animals/ea.jpg",
+                    "images/animals/leo.jpg",
+                    "images/animals/nar.jpg",
+                    "images/animals/owl.jpg",
+                    "images/animals/axo.jpg",
+                    "images/animals/pang.jpg",
+
+
+                ]
+            },
+            food: {
+                title: 'Food & Cuisine',
+                items: [
+                    'Pizza', 'Sushi', 'Crème Brûlée', 'Poutine', 'Hummus',
+                    'Ratatouille', 'Burrito', 'Falafel', 'Macarons',  'Tiramisu', 
+                    'Butter Chicken',  'Croissant', 'Fish and Chips',
+                    'Lasagna', 'Baguette', 'Pad Thai', 'Ramen', 'Biryani',
+                    'Bagel with Lox', 'Escargot'
+                    
+                   
+                     
+                ],
+                images: [
+                    "images/food/pizza.jpg",
+                    "images/food/sushi.jpg",
+                    "images/food/cb.jpg",
+                    "images/food/pt.jpg",
+                    "images/food/hum.jpg",
+                    "images/food/rat.jpg",
+                    "images/food/burr.jpg",
+                    "images/food/fal.jpg",
+                    "images/food/mac.jpg",
+                    "images/food/tm.jpg",
+
+                    "images/food/bc.jpg",
+                    "images/food/cr.jpg",
+                    "images/food/fc.jpg",
+                    "images/food/las.jpg",
+                    "images/food/bag.jpg",
+                    "images/food/pthai.jpg",
+                    "images/food/rm.jpg",
+                    "images/food/bir.jpg",
+                    "images/food/lox.jpg",
+                    "images/food/esc.jpg",
+    
+
+                ]
+            },
+            cars: {
+                title: 'Car Makes',
+                items: [
+                    'Toyota', 'Honda', 'Ferrari', 'Mercedes-Benz', 'Dodge',
+                    'Lamborghini', 'Subaru', 'Volkswagen', 'Mazda','Hyundai', 
+                    'Jaguar', 'Bentley', 'Cadillac', 'Lincoln', 'Lexus',
+                    'Rolls-Royce', 'Maserati', "Tesla", "Porsche", "Audi"
+                           
+                ],
+                images: [
+                    "images/cars/toy.jpg",
+                    "images/cars/hon.jpg",
+                    "images/cars/ferr.jpg",
+                    "images/cars/mer.jpg",
+                    "images/cars/dod.jpg",
+                    "images/cars/lam.jpg",
+                    "images/cars/sub.jpg",
+                    "images/cars/volk.jpg",
+                    "images/cars/maz.jpg",
+                    "images/cars/hyun.jpg",
+
+                    "images/cars/jag.jpg",
+                    "images/cars/bent.jpg",
+                    "images/cars/cad.jpg",
+                    "images/cars/linc.jpg",
+                    "images/cars/lex.jpg",
+                    "images/cars/rr.jpg",
+                    "images/cars/mas.jpg",
+                    "images/cars/tes.jpg",
+                    "images/cars/por.jpg",
+                    "images/cars/aud.jpg",
+
+                ]
+            },
+            landmarks: {
+                title: 'Famous Landmarks',
+                items: [
+                    'Eiffel Tower (Paris)', 'Big Ben (London)', 'Taj Mahal (India)', 'Colosseum (Rome)',
+                    'Pyramids of Giza (Egypt)', 'Great Wall of China', 'Statue of Liberty (New York)', 
+                    'Burj Khalifa (Dubai)', 'Empire State Building (New York)', 'Kremlin (Moscow)',
+                    'CN Tower (Toronto)', 'Leaning Tower of Pisa (Italy)', "Notre-Dame Cathedral (France)",
+                    'Petra (Jordan)', 'Machu Picchu (Peru)', 'Sydney Opera House (Australia)',
+                    'Golden Gate Bridge (San Francisco)', 'Brooklyn Bridge (New York)', 
+                    'Buckingham Palace (London)', 'St. Basil\'s Cathedral (Moscow)'
+                    
+                ],
+                images: [
+                    "images/landmarks/eif.jpg",
+                    "images/landmarks/big.jpg",
+                    "images/landmarks/taj.jpg",
+                    "images/landmarks/col.jpg",
+                    "images/landmarks/giz.jpg",
+                    "images/landmarks/chi.jpg",
+                    "images/landmarks/lib.jpg",
+                    "images/landmarks/bur.jpg",
+                    "images/landmarks/emp.jpg",
+                    "images/landmarks/kre.jpg",
+
+                    "images/landmarks/cn.jpg",
+                    "images/landmarks/piz.jpg",
+                    "images/landmarks/nd.jpg",
+                    "images/landmarks/pet.jpg",
+                    "images/landmarks/mp.jpg",
+                    "images/landmarks/soh.jpg",
+                    "images/landmarks/ggb.jpg",
+                    "images/landmarks/bro.jpg",
+                    "images/landmarks/buc.jpg",
+                    "images/landmarks/st.jpg",
+
+
+                ]
+            },
+            art: {
+                title: 'Art',
+                items: [
+                    'Mona Lisa - Leonardo da Vinci', "Palette", "Fan Brush", 'The Scream - Edvard Munch', 
+                    'Acrylic Paints', 'The Starry Night - Vincent van Gogh',  'Charcoal Sticks',
+                    'The Thinker - Auguste Rodin', "Canvas", 'Venus de Milo - Alexandros of Antioch', 
+                    'The Sistine Chapel Ceiling - Michelangelo', "Palette Knife",
+                    'Campbell\'s Soup Cans - Andy Warhol', 'Easel', 'Art Gallery',
+                    'Artist Apron', 'The Creation of Adam - Michelangelo', "Sketch pencils", 
+                    'Girl with a Pearl Earring - Johannes Vermeer', 'Blending Stumps'    
+                    
+                ],
+                images: [
+                    "images/art/ml.jpg",
+                    "images/art/pal.jpg",
+                    "images/art/fb.jpg",
+                    "images/art/scr.jpg",
+                    "images/art/acr.jpg",
+                    "images/art/sta.jpg",
+                    "images/art/cha.jpg",
+                    "images/art/thi.jpg",
+                    "images/art/can.jpg",
+                    "images/art/vdm.jpg",
+                    "images/art/sis.jpg",
+                    "images/art/pk.jpg",
+                    "images/art/csc.jpg",
+                    "images/art/eas.jpg",
+                    "images/art/ag.jpg",
+                    "images/art/apr.jpg",
+                    "images/art/coa.jpg",
+                    "images/art/ske.jpg",
+                    "images/art/gir.jpg",
+                    "images/art/ble.jpg",
+
+
+                ]
+            },
+            fashion: {
+                title: 'Luxury Fashion',
+                items: [
+                    'Coco Chanel', 'Christian Dior', 'Yves Saint Laurent', 'Armani',
+                    'Versace', 'Ralph Lauren', 'Calvin Klein', 'Tommy Hilfiger',
+                    'Lacoste', 'Alexander McQueen', 'Vivienne Westwood', 'Hermès', 
+                    'Jean Paul Gaultier',  'Prada', 'Gucci', 'Louis Vuitton', 'Burberry', 
+                    'Balenciaga', 'Fendi', 'Valentino'    
+                    
+                  
+                ],
+                images: [
+                    "images/fashion/coco.jpg",
+                    "images/fashion/cd.jpg",
+                    "images/fashion/ysl.jpg",
+                    "images/fashion/arm.jpg",
+                    "images/fashion/ver.jpg",
+                    "images/fashion/ral.jpg",
+                    "images/fashion/ck.jpg",
+                    "images/fashion/tom.jpg",
+                    "images/fashion/lac.jpg",
+                    "images/fashion/ale.jpg",
+                    "images/fashion/viv.jpg",
+                    "images/fashion/her.jpg",
+                    "images/fashion/jpg.jpg",
+                    "images/fashion/pra.jpg",
+                    "images/fashion/guc.jpg",
+                    "images/fashion/lv.jpg",
+                    "images/fashion/bur.jpg",
+                    "images/fashion/bal.jpg",
+                    "images/fashion/fen.jpg",
+                    "images/fashion/val.jpg",
+                   
+
+                ]
+            },
+            nature: {
+                title: 'Plants & Horticulture',
+                items: [
+                    "Rose", "Sunflower", "Maple", "Cactus",
+                    "Orchid", "Aloe Vera", "Poppy", "Bamboo",
+                    "Carnation", "Dandelion", "Willow Tree",
+                    "Marigold", "Lavender", "Rosemary", 
+                    "Baby\'s Breath", "Tulip", "Lily Pad",
+                    "Palm Tree", "Spider Lily", "Basil", 
+                ],
+                images: [
+                "images/nature/rose.jpg",
+                "images/nature/sun.jpg",
+                "images/nature/map.jpg",
+                "images/nature/cac.jpg",
+                "images/nature/orc.jpg",
+                "images/nature/av.jpg",
+                "images/nature/pop.jpg",
+                "images/nature/bam.jpg",
+                "images/nature/car.jpg",
+                "images/nature/dan.jpg",
+                "images/nature/wil.jpg",
+                "images/nature/mar.jpg",
+                "images/nature/lav.jpg",
+                "images/nature/rm.jpg",
+                "images/nature/bb.jpg",
+                "images/nature/tul.jpg",
+                "images/nature/lil.jpg",
+                "images/nature/pt.jpg",
+                "images/nature/sl.jpg",
+                "images/nature/bas.jpg",
+               
+
+            ]
+            },
+            space: {
+                title: 'Space & Astronomy',
+                items: [
+                    'The Moon', 'Mars', 'Jupiter', 'Saturn',
+                    'Venus', 'Mercury', 'Neptune', 'Uranus',
+                    'Pluto', 'The Sun', 'Milky Way', 'Nebula',
+                    'Black Hole', 'Supernova', 'Hubble Telescope',
+                    'Space Shuttle', 'Astronaut', 'Meteor Shower', 
+                    'Solar Eclipse', 'Asteroid Belt'
+                ],
+                images: [
+                    "images/space/mn.jpg",
+                    "images/space/mr.jpg",
+                    "images/space/jp.jpg",
+                    "images/space/st.jpg",
+                    "images/space/vn.jpg",
+                    "images/space/mrc.jpg",
+                    "images/space/np.jpg",
+                    "images/space/ur.jpg",
+                    "images/space/pl.jpg",
+                    "images/space/su.jpg",
+                    "images/space/mw.jpg",
+                    "images/space/nb.jpg",
+                    "images/space/bh.jpg",
+                    "images/space/sn.jpg",
+                    "images/space/ht.jpg",
+                    "images/space/ss.jpg",
+                    "images/space/ast.jpg",
+                    "images/space/ms.jpg",
+                    "images/space/se.jpg",
+                    "images/space/ab.jpg",
+               
+
+                ]
+            },
+            birthday: {
+                title: 'Birthday',
+                items: [
+                    "Streamers", "Confetti Poppers", "Party Games", "Cake",
+                    "Candles", "Balloons", "Presents", "Birthday Card", "Party Blower",
+                    "Decorations", "Invitation", "Milestone", "Happy Birthday Song",
+                    "Birthday Wish", "Party Hats", "Surprise",
+                    "Banner", "Cupcakes", "Sparklers", "Birthday Boy",
+
+                ],
+                images: [
+                    "images/birthday/str.jpg",
+                    "images/birthday/con.jpg",
+                    "images/birthday/pg.jpg",
+                    "images/birthday/cak.jpeg",
+                    "images/birthday/can.jpg",
+                    "images/birthday/bal.jpg",
+                    "images/birthday/pre.jpg",
+                    "images/birthday/bc.jpg",
+                    "images/birthday/blow.jpg",
+                    "images/birthday/dec.jpg",
+                    "images/birthday/inv.jpg",
+                    "images/birthday/mil.jpg",
+                    "images/birthday/hbs.jpg",
+                    "images/birthday/bw.jpg",
+                    "images/birthday/ph.jpg",
+                    "images/birthday/sur.jpg",
+                    "images/birthday/ban.jpg",
+                    "images/birthday/cup.jpg",
+                    "images/birthday/spa.jpg",
+                    "images/birthday/bboy.jpeg",
+
+            ]
+            },
+            brands: {
+                title: 'Famous Brand Logos',
+                items: [
+                    'Nike', 'McDonald\'s',  'Lego', 'Starbucks', 'Target',
+                     'Lululemon', 'Domino\'s Pizza', 'Spotify', 'Shell',
+                    'Adidas', 'Mastercard', 'Uber', 'Nintendo 64', 'Walmart', 'IKEA', 
+                    'Rolex', 'Coca Cola', 'UPS', 'Cartier', 'Burger King',
+                      
+                     
+                ],
+                images: [
+                    "images/brands/nik.jpg",
+                    "images/brands/mcd.jpg",
+                    "images/brands/leg.jpg",
+                    "images/brands/sb.jpg",
+                    "images/brands/tar.jpg",
+                    "images/brands/ll.jpg",
+                    "images/brands/dp.jpg",
+                    "images/brands/spo.jpg",
+                    "images/brands/she.jpg",
+                    "images/brands/adi.jpg",
+                    "images/brands/mc.jpg",
+                    "images/brands/ub.jpg",
+                    "images/brands/nin.jpg",
+                    "images/brands/wal.jpg",
+                    "images/brands/ikea.jpg",
+                    "images/brands/rol.jpg",
+                    "images/brands/cok.jpg",
+                    "images/brands/ups.jpg",
+                    "images/brands/cart.jpg",
+                    "images/brands/bk.jpg",
+                 
+
+                ]
+            },
+            superheroes: {
+                title: 'Superheroes',
+                items: [
+                    'Superman', 'Batman', 'Spider-Man', 'Wonder Woman',
+                    'Iron Man', 'Captain America', 'Thor', 'Hulk',
+                    'Black Widow', 'Ant-Man', 'Groot', 'Captain Marvel',
+                    'Rocket Raccoon', 'The Flash','Aquaman', 'Storm', 
+                    'Deadpool', 'Wolverine', 'Professor X', 'Spider-Gwen'
+                    
+                ],
+                images: [
+                    "images/superheroes/sup.jpg",
+                    "images/superheroes/bat.jpg",
+                    "images/superheroes/sm.jpg",
+                    "images/superheroes/ww.jpg",
+                    "images/superheroes/im.jpg",
+                    "images/superheroes/ca.jpg",
+                    "images/superheroes/th.jpg",
+                    "images/superheroes/hu.jpg",
+                    "images/superheroes/bw.jpg",
+                    "images/superheroes/am.jpg",
+                    "images/superheroes/gr.jpg",
+                    "images/superheroes/cm.jpg",
+                    "images/superheroes/rr.jpg",
+                    "images/superheroes/fl.jpg",
+                    "images/superheroes/aqm.jpg",
+                    "images/superheroes/st.jpg",
+                    "images/superheroes/dp.jpg",
+                    "images/superheroes/wv.jpg",
+                    "images/superheroes/px.jpg",
+                    "images/superheroes/gw.jpg",
+
+                ]
+
+            },
+            boardgames: {
+                title: 'Board Games',
+                items: [
+                    "Monopoly", "Scrabble", "Chess", "Risk",
+                    "Clue",  "Bingo", "Snakes and Ladders", "Uno",
+                    "Battleship", "Connect Four", "Jenga", 
+                    "Trivial Pursuit", "Guess Who", "Operation",
+                    "Sorry", "The Game of Life", "Pictionary",
+                    "Yahtzee", "Jumanji", "Checkers",
+
+                ],
+                images: [
+                    "images/boardgames/mn.jpg",
+                    "images/boardgames/sc.jpg",
+                    "images/boardgames/ch.jpg",
+                    "images/boardgames/ri.jpg",
+                    "images/boardgames/cl.jpg",
+                    "images/boardgames/bi.jpg",
+                    "images/boardgames/sl.jpg",
+                    "images/boardgames/un.jpg",
+                    "images/boardgames/bs.jpg",
+                    "images/boardgames/cf.jpg",
+                    "images/boardgames/jg.jpg",
+                    "images/boardgames/tp.jpg",
+                    "images/boardgames/gw.jpg",
+                    "images/boardgames/op.jpg",
+                    "images/boardgames/sr.jpg",
+                    "images/boardgames/gl.jpg",
+                    "images/boardgames/pic.jpg",
+                    "images/boardgames/yt.jpg",
+                    "images/boardgames/jji.jpg",
+                    "images/boardgames/chr.jpg",
+
+                ]
+            },
+            flags: {
+                title: 'Country Flags',
+                items: [
+                    'United States', 'United Kingdom',  'China', 'Spain',
+                    'France', 'Germany', 'Italy',  'Ukraine', 'Japan',
+                    'Greece', 'Ireland', 'Iran', 'Canada', 'Jamaica', 'Argentina',
+                    'Russia', 'South Korea', 'India', 'Mexico', 'Egypt'             
+                    
+                ],
+                images: [
+                    "images/flags/us.jpg",
+                    "images/flags/uk.jpg",
+                    "images/flags/ch.jpg",
+                    "images/flags/sp.jpg",
+                    "images/flags/fr.jpg",
+                    "images/flags/gr.jpg",
+                    "images/flags/it.jpg",
+                    "images/flags/ukr.jpg",
+                    "images/flags/jp.jpg",
+                    "images/flags/gre.jpg",
+                    "images/flags/ire.jpg",
+                    "images/flags/ira.jpg",
+                    "images/flags/can.jpg",
+                    "images/flags/jam.jpg",
+                    "images/flags/arg.jpg",
+                    "images/flags/rus.jpg",
+                    "images/flags/sk.jpg",
+                    "images/flags/ind.jpg",
+                    "images/flags/mex.jpg",
+                    "images/flags/egy.jpg",
+
+
+                ]
+            }
+    
+        };
+
+        function showTopic(topic) {
+            currentTopic = topic;
+            currentSlide = 0;
+            captionVisible = new Array(20).fill(false);
+            
+            const existingSlides = document.querySelectorAll('.photo-slide-container');
+            existingSlides.forEach(slide => slide.remove());
+            
+            const topicData = topics[topic];
+            slides = [];
+
+        
+
+            for (let i = 0; i < 20; i++) {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'slide photo-slide-container';
+                slideDiv.innerHTML = `
+                    <div class="photo-slide" onclick="toggleCaption(${i})">
+                        <h2>${topicData.title}</h2>
+                        <img src="${topicData.images[i]}" alt="Trivia Image ${i + 1}">
+                        <p id="caption-${i}">${topicData.items[i]}</p>
+                    </div>
+                `;
+                document.body.appendChild(slideDiv);
+                slides.push(slideDiv);
+                
+            }
+            
+            document.getElementById('menu').classList.remove('active');
+            document.getElementById('controls').style.display = 'flex';
+            document.getElementById('counter').style.display = 'block';
+            document.getElementById('backBtn').style.display = 'block';
+            
+            
+            updateSlide();
+        }
+
+        function toggleCaption(slideIndex) {
+            if (slideIndex === currentSlide) {
+                captionVisible[slideIndex] = !captionVisible[slideIndex];
+                const caption = document.getElementById(`caption-${slideIndex}`);
+                if (captionVisible[slideIndex]) {
+                    caption.classList.add('visible');
+                } else {
+                    caption.classList.remove('visible');
+                }
+            }
+        }
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.toggle('active', index === currentSlide);
+            });
+            document.getElementById('counter').textContent = `${currentSlide + 1} / 20`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < 19) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function backToMenu() {
+            slides.forEach(slide => slide.remove());
+            slides = [];
+            captionVisible = [];
+            document.getElementById('menu').classList.add('active');
+            document.getElementById('controls').style.display = 'none';
+            document.getElementById('counter').style.display = 'none';
+            document.getElementById('backBtn').style.display = 'none';
+            
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (slides.length > 0) {
+                if (e.key === 'ArrowRight') nextSlide();
+                if (e.key === 'ArrowLeft') prevSlide();
+                if (e.key === 'Escape') backToMenu();
+                if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    toggleCaption(currentSlide);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

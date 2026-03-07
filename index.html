@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Michael's Category Chaos</title>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+/* BASE */
+body {
+    height:100vh;
+    overflow:hidden;
+     background: radial-gradient(circle at 30% 30%, #9e9efc, #5766f0, #141e30);
+    cursor:pointer;
+    font-family:'Segoe UI', sans-serif;
+}
+
+/* LAYER 1 — Background */
+.background {
+    position:absolute;
+    width:100%;
+    height:100%;
+    z-index:1;
+    pointer-events:none;
+}
+
+/* LAYER 2 — Particles */
+canvas#particles {
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    z-index:2;
+    pointer-events:none;
+}
+
+/* LAYER 3 — Lightning */
+.lightning {
+    position:absolute;
+    width:100%;
+    height:100%;
+    background:white;
+    opacity:0;
+    z-index:3;
+    pointer-events:none;
+}
+
+/* LAYER 4 — Enter text */
+.enter-text {
+    position:absolute;
+    bottom:8%;
+    width:100%;
+    text-align:center;
+    color:white;
+    font-size:1.6em;
+    letter-spacing:4px;
+    opacity:0;
+    animation:fadeInText 3s ease forwards;
+    animation-delay:3s;
+    z-index:4;
+}
+.enter-text span { animation:pulse 2s infinite; }
+
+/* LAYER 5 — Logo + FX */
+.logo-container {
+    position:absolute;
+    width:100%;
+    height:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    perspective:1200px;
+    z-index:5;
+}
+
+.logo {
+    width:480px;
+    opacity:0;
+    transform:scale(0.8) rotateX(0deg) rotateY(0deg);
+    transition:transform 0.1s ease, opacity 2s ease;
+    filter:drop-shadow(0 0 25px rgba(255,255,255,0.2));
+}
+.logo.reveal {
+    opacity:1;
+    transform:scale(1.15);
+}
+
+.metal-light {
+    position:absolute;
+    width:600px;
+    height:600px;
+    pointer-events:none;
+    background:radial-gradient(circle at center,
+        rgba(255,255,255,0.4) 0%,
+        rgba(255,255,255,0.1) 30%,
+        transparent 70%);
+    mix-blend-mode:screen;
+    transition:0.1s;
+}
+
+.smoke-burst {
+    position:absolute;
+    width:100px;
+    height:100px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(200,200,200,0.6) 0%, transparent 70%);
+    opacity:0;
+    pointer-events:none;
+}
+
+/* INTRO FADE OUT */
+#introWrapper.fade-out {
+    opacity:0;
+    transition:opacity 0.8s ease;
+    pointer-events:none;
+}
+
+/* TEXT ANIMATIONS */
+@keyframes fadeInText { to { opacity:1; } }
+@keyframes pulse { 50% { opacity:0.4; } }
+</style>
+</head>
+
+<body>
+
+<!-- INTRO WRAPPER -->
+<div id="introWrapper">
+
+    <div class="background"></div>
+    <canvas id="particles"></canvas>
+    <div class="lightning" id="lightning"></div>
+
+    <div class="logo-container">
+        <img src="index.PNG" class="logo" id="logo">
+        <div class="metal-light" id="metalLight"></div>
+        <div class="smoke-burst" id="smokeBurst"></div>
+    </div>
+
+    <div class="enter-text">
+        <span>PRESS ANYWHERE TO ENTER</span>
+    </div>
+
+</div>
+
+<!-- AUDIO -->
+<audio id="bgMusic" loop>
+    <source src="intro-music.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="whooshSound">
+    <source src="whoosh.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+/* -----------------------------
+   AUDIO HELPERS
+----------------------------- */
+
+function fadeInMusic(audio, duration = 2000) {
+    audio.volume = 0;
+    audio.play();
+
+    let step = 0.02;
+    let interval = duration / (1 / step);
+
+    let fade = setInterval(() => {
+        if (audio.volume < 0.4) {
+            audio.volume = Math.min(audio.volume + step, 0.4);
+        } else {
+            clearInterval(fade);
+        }
+    }, interval);
+}
+
+function fadeOutMusic(audio, duration = 1500) {
+    let step = 0.02;
+    let interval = duration / (1 / step);
+
+    let fade = setInterval(() => {
+        if (audio.volume > 0) {
+            audio.volume = Math.max(audio.volume - step, 0);
+        } else {
+            clearInterval(fade);
+            audio.pause();
+        }
+    }, interval);
+}
+
+/* -----------------------------
+   INTRO ANIMATIONS
+----------------------------- */
+
+let entering = false;
+
+// Lightning flash
+const lightning = document.getElementById("lightning");
+setTimeout(() => {
+    lightning.style.opacity = 1;
+    lightning.style.transition = "opacity 0.1s";
+    setTimeout(() => lightning.style.opacity = 0, 100);
+}, 400);
+
+// Logo reveal
+const logo = document.getElementById("logo");
+setTimeout(() => logo.classList.add("reveal"), 600);
+
+// Parallax
+document.addEventListener("mousemove", (e) => {
+    if (entering) return;
+    const x = (window.innerWidth / 2 - e.clientX) / 40;
+    const y = (window.innerHeight / 2 - e.clientY) / 40;
+    logo.style.transform = `scale(1.15) rotateX(${y}deg) rotateY(${-x}deg)`;
+
+    const metal = document.getElementById("metalLight");
+    metal.style.left = (e.clientX - 300) + "px";
+    metal.style.top = (e.clientY - 300) + "px";
+});
+
+/* -----------------------------
+   PARTICLES
+----------------------------- */
+
+const canvas = document.getElementById("particles");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+for (let i = 0; i < 100; i++) {
+    particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 3,
+        speedY: Math.random() * -1 - 0.2
+    });
+}
+
+function animateParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "orange";
+    particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        p.y += p.speedY;
+        if (p.y < 0) p.y = canvas.height;
+    });
+    requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+/* -----------------------------
+   CLICK SYSTEM
+----------------------------- */
+
+let introStarted = false;
+const music = document.getElementById("bgMusic");
+music.volume = 0.4;
+
+document.addEventListener("click", () => {
+
+    if (!introStarted) {
+        introStarted = true;
+        fadeInMusic(music, 2000);
+        document.querySelector(".enter-text span").innerText = "PRESS AGAIN TO ENTER";
+        return;
+    }
+
+    enterGame();
+});
+
+/* -----------------------------
+   ENTER GAME TRANSITION
+----------------------------- */
+
+function enterGame() {
+    entering = true;
+
+    const whoosh = document.getElementById("whooshSound");
+    whoosh.volume = 0.8;
+    whoosh.play();
+
+    fadeOutMusic(music, 1500);
+
+    const smoke = document.getElementById("smokeBurst");
+    smoke.style.opacity = 1;
+    smoke.style.transition = "all 0.8s ease-out";
+    smoke.style.transform = "scale(15)";
+    smoke.style.opacity = 0;
+
+    logo.style.transition = "transform 0.6s ease, opacity 0.6s ease";
+    logo.style.transform = "scale(2) rotateX(20deg)";
+    logo.style.opacity = 0;
+
+    // Fade out intro, then redirect
+    setTimeout(() => {
+        document.getElementById("introWrapper").classList.add("fade-out");
+
+        setTimeout(() => {
+            window.location.href = "main.html";
+        }, 800); // wait for fade-out
+    }, 600);
+}
+</script>
+
+</body>
+</html>
